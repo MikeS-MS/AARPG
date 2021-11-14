@@ -3,13 +3,19 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "QuestStructures.generated.h"
 
 /**
  * 
  */
-class PROJECTU_API QuestStructures
+USTRUCT(BlueprintType)
+struct FQuest
 {
-public:
-	QuestStructures();
-	~QuestStructures();
+	GENERATED_BODY()
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Quest")
+	FName QuestName; 
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Quest")
+	int32 QuestID; 
 };
