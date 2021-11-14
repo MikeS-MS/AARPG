@@ -3,9 +3,10 @@
 
 #include "GameQuestSubsystem.h"
 
+DEFINE_LOG_CATEGORY(LogQuestSystem)
+
 TArray<FQuest> UGameQuestSubsystem::GetActiveQuests() const
 {
-        // TODO: @Stefan Return the actual active quests
 	UE_LOG(LogQuestSystem, Warning, TEXT("Returned all active quests"))
 	return Quests;
 }
