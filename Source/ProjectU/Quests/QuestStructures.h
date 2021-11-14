@@ -14,8 +14,26 @@ struct FQuest
 	GENERATED_BODY()
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Quest")
+	int32 QuestID;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Quest")
 	FName QuestName; 
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Quest")
-	int32 QuestID; 
+	FName QuestDescription; 
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Quest")
+	FName QuestDescriptionHUD; 
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Quest")
+	TArray<int32> SubQuestsIDs; 
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Quest")
+	bool bIsMasterQuest;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Quest")
+	bool bIsSideQuest;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Quest")
+	bool bIsCompleted;
 };

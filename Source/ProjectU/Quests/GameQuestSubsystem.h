@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "QuestStructures.h"
 #include "Subsystems/GameInstanceSubsystem.h"
 #include "GameQuestSubsystem.generated.h"
 
@@ -17,11 +18,37 @@ class PROJECTU_API UGameQuestSubsystem : public UGameInstanceSubsystem
 {
     GENERATED_BODY()
 
-public:
+private:
+    
+    UPROPERTY()
+    TArray<FQuest>  ActiveQuests;
 
+    UPROPERTY()
+    TArray<FQuest>  Quests;
+public:
+    
     UPROPERTY(BlueprintAssignable, Category="Dispatchers")
     FQuestDelegate  OnQuestCompleted;
 
     UPROPERTY(BlueprintAssignable, Category="Dispatchers")
     FQuestDelegate  OnQuestActivated;
+    
+    UPROPERTY(BlueprintAssignable, Category="Dispatchers")
+    FQuestDelegate  OnQuestsLoaded;
+public:
+
+    UFUNCTION(BlueprintCallable, Category="Quests")
+    TArray<FQuest> GetActiveQuests() const;
+
+    UFUNCTION(BlueprintCallable, Category="Quests")
+    TArray<FQuest> GetAllQuests() const;
+    
+    UFUNCTION(BlueprintCallable, Category="Quests")
+    void LoadQuests(TArray<FQuest> InQuests);
+    
+    UFUNCTION(BlueprintCallable, Category="Quests")
+    void CompleteQuest(int32 QuestID);
+    
+    UFUNCTION(BlueprintCallable, Category="Quests")
+    void ActivateQuest(int32 QuestID);
 };
