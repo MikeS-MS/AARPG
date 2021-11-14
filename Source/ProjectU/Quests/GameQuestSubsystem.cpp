@@ -5,22 +5,54 @@
 
 DEFINE_LOG_CATEGORY(LogQuestSystem)
 
+TArray<int32> UGameQuestSubsystem::GetActiveQuestsIDs() const
+{
+	TArray<int32> ActiveQuestIDs;
+	for(const auto& Quest : Quests)
+	{
+		if (!Quest.Value.bIsCompleted)
+			ActiveQuestIDs.Push(Quest.Key);
+	}
+
+	return ActiveQuestIDs;
+}
+
 TArray<FQuest> UGameQuestSubsystem::GetActiveQuests() const
 {
 	UE_LOG(LogQuestSystem, Warning, TEXT("Returned all active quests"))
-	return Quests;
+	TArray<FQuest> ActiveQuests;
+	for(const auto& Quest : Quests)
+	{
+		if (!Quest.Value.bIsCompleted)
+			ActiveQuests.Push(Quest.Value);
+	}
+
+	return ActiveQuests;
 }
 
 TArray<FQuest> UGameQuestSubsystem::GetAllQuests() const
 {
 	UE_LOG(LogQuestSystem, Warning, TEXT("Returned all quests"))
-	return Quests;
+	TArray<FQuest> AllQuests;
+	for(const auto& Quest : Quests)
+	{
+		AllQuests.Push(Quest.Value);
+	}
+
+	return AllQuests;
+}
+
+FQuest UGameQuestSubsystem::GetQuest(int32 QuestID) const
+{
+	return Quests[QuestID];
 }
 
 void UGameQuestSubsystem::LoadQuests(TArray<FQuest> InQuests)
 {
 	UE_LOG(LogQuestSystem, Warning, TEXT("Loaded quests"))
-	Quests = InQuests;
+	for(const auto& Quest: InQuests)
+		Quests[Quest.QuestID] = Quest;
+	
 	OnQuestsLoaded.Broadcast(0);
 }
 

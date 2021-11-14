@@ -21,10 +21,7 @@ class PROJECTU_API UGameQuestSubsystem : public UGameInstanceSubsystem
 private:
     
     UPROPERTY()
-    TArray<FQuest>  ActiveQuests;
-
-    UPROPERTY()
-    TArray<FQuest>  Quests;
+    TMap<int32, FQuest> Quests;
 public:
     
     UPROPERTY(BlueprintAssignable, Category="Dispatchers")
@@ -36,12 +33,18 @@ public:
     UPROPERTY(BlueprintAssignable, Category="Dispatchers")
     FQuestDelegate  OnQuestsLoaded;
 public:
+    
+    UFUNCTION(BlueprintCallable, Category="Quests")
+    TArray<int32> GetActiveQuestsIDs() const;
 
     UFUNCTION(BlueprintCallable, Category="Quests")
     TArray<FQuest> GetActiveQuests() const;
 
     UFUNCTION(BlueprintCallable, Category="Quests")
     TArray<FQuest> GetAllQuests() const;
+    
+    UFUNCTION(BlueprintCallable, Category="Quests")
+    FQuest GetQuest(int32 QuestID) const;
     
     UFUNCTION(BlueprintCallable, Category="Quests")
     void LoadQuests(TArray<FQuest> InQuests);
