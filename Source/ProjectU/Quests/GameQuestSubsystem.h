@@ -14,7 +14,7 @@ DECLARE_LOG_CATEGORY_EXTERN(LogQuestSystem, Log, All)
  * 
  */
 UCLASS()
-class PROJECTU_API UGameQuestSubsystem : public UGameInstanceSubsystem
+class PROJECTU_API UGameQuestSubsystem final : public UGameInstanceSubsystem
 {
     GENERATED_BODY()
 
@@ -47,11 +47,11 @@ public:
     FQuest GetQuest(int32 QuestID) const;
     
     UFUNCTION(BlueprintCallable, Category="Quests")
-    void LoadQuests(TArray<FQuest> InQuests);
+    void LoadQuests(const TArray<FQuest> InQuests);
     
     UFUNCTION(BlueprintCallable, Category="Quests")
-    void CompleteQuest(int32 QuestID);
+    void CompleteQuest(const int32 QuestID);
     
     UFUNCTION(BlueprintCallable, Category="Quests")
-    void ActivateQuest(int32 QuestID);
+    void ActivateQuest(const int32 QuestID);
 };

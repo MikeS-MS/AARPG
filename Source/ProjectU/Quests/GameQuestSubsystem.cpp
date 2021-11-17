@@ -32,38 +32,53 @@ TArray<FQuest> UGameQuestSubsystem::GetActiveQuests() const
 
 TArray<FQuest> UGameQuestSubsystem::GetAllQuests() const
 {
-	UE_LOG(LogQuestSystem, Warning, TEXT("Returned all quests"))
-	TArray<FQuest> AllQuests;
-	for(const auto& Quest : Quests)
+	//UE_LOG(LogQuestSystem, Warning, TEXT("Returned all quests"))
+	//TArray<FQuest> AllQuests;
+	//for(const auto& Quest : Quests)
+	//{
+	//	AllQuests.Push(Quest.Value);
+	//}
+
+	//return AllQuests;
+        return Quests.Values();
+}
+
+FQuest UGameQuestSubsystem::GetQuest(const int32 QuestID) const
+{
+	if(Quests.Find(QuestID))
 	{
-		AllQuests.Push(Quest.Value);
+		return Quests[QuestID];
 	}
-
-	return AllQuests;
+	else return FQuest();
 }
 
-FQuest UGameQuestSubsystem::GetQuest(int32 QuestID) const
+void UGameQuestSubsystem::LoadQuests(const TArray<FQuest> InQuests)
 {
-	return Quests[QuestID];
-}
-
-void UGameQuestSubsystem::LoadQuests(TArray<FQuest> InQuests)
-{
-	UE_LOG(LogQuestSystem, Warning, TEXT("Loaded quests"))
+	UE_LOG(LogQuestSystem, Warning, TEXT("Loaded %d quests"), InQuests.Num())
 	for(const auto& Quest: InQuests)
 		Quests[Quest.QuestID] = Quest;
 	
 	OnQuestsLoaded.Broadcast(0);
 }
 
-void UGameQuestSubsystem::CompleteQuest(int32 QuestID)
+void UGameQuestSubsystem::CompleteQuest(const int32 QuestID)
 {
-	UE_LOG(LogQuestSystem, Warning, TEXT("Completed quest, ID:%d"), QuestID)
-	OnQuestCompleted.Broadcast(QuestID);
+	if(Quests.Find(QuestID))
+	{
+		Quests[QuestID].bIsCompleted = true;
+		OnQuestCompleted.Broadcast(QuestID);
+		UE_LOG(LogQuestSystem, Warning, TEXT("Completed quest, ID:%d"), QuestID)
+	}
+	UE_LOG(LogQuestSystem, Error, TEXT("Invalid quest ID:%d, couldn't complete the quest."), QuestID)
 }
 
-void UGameQuestSubsystem::ActivateQuest(int32 QuestID)
+void UGameQuestSubsystem::ActivateQuest(const int32 QuestID)
 {
-	UE_LOG(LogQuestSystem, Warning, TEXT("Activated quest, ID:%d"), QuestID)
-	OnQuestActivated.Broadcast(QuestID);
+	if(Quests.Find(QuestID))
+	{
+		Quests[QuestID].bIsActive = true;
+		OnQuestActivated.Broadcast(QuestID);
+		UE_LOG(LogQuestSystem, Warning, TEXT("Activated quest, ID:%d"), QuestID)
+	}
+	UE_LOG(LogQuestSystem, Error, TEXT("Invalid quest ID:%d, couldn't activate the quest."), QuestID)
 }
