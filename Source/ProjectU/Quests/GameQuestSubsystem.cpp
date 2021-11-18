@@ -32,15 +32,10 @@ TArray<FQuest> UGameQuestSubsystem::GetActiveQuests() const
 
 TArray<FQuest> UGameQuestSubsystem::GetAllQuests() const
 {
-	//UE_LOG(LogQuestSystem, Warning, TEXT("Returned all quests"))
-	//TArray<FQuest> AllQuests;
-	//for(const auto& Quest : Quests)
-	//{
-	//	AllQuests.Push(Quest.Value);
-	//}
-
-	//return AllQuests;
-        return Quests.Values();
+	UE_LOG(LogQuestSystem, Warning, TEXT("Returned all quests"))
+	TArray<FQuest> AllQuests;
+	Quests.GenerateValueArray(ActiveQuests);
+	return AllQuests;
 }
 
 FQuest UGameQuestSubsystem::GetQuest(const int32 QuestID) const
