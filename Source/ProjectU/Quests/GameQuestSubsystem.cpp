@@ -51,7 +51,9 @@ void UGameQuestSubsystem::LoadQuests(const TArray<FQuest> InQuests)
 {
 	UE_LOG(LogQuestSystem, Warning, TEXT("Loaded %d quests"), InQuests.Num())
 	for(const auto& Quest: InQuests)
-		Quests[Quest.QuestID] = Quest;
+	{
+		Quests.Add(Quest.QuestID, Quest);
+	}
 	
 	OnQuestsLoaded.Broadcast(0);
 }
