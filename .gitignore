@@ -75,3 +75,5 @@ DerivedDataCache/*
 
 # Content to ignore
 Content/Models
+Content/FX
+Content/AssetPacks
