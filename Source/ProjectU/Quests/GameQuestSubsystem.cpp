@@ -23,7 +23,7 @@ TArray<FQuest> UGameQuestSubsystem::GetActiveQuests() const
 	TArray<FQuest> ActiveQuests;
 	for(const auto& Quest : Quests)
 	{
-		if (!Quest.Value.bIsCompleted)
+                if (!Quest.Value.bIsCompleted)
 			ActiveQuests.Push(Quest.Value);
 	}
 
@@ -44,7 +44,7 @@ FQuest UGameQuestSubsystem::GetQuest(const int32 QuestID) const
 	{
 		return Quests[QuestID];
 	}
-	else return FQuest();
+	return FQuest();
 }
 
 void UGameQuestSubsystem::LoadQuests(const TArray<FQuest> InQuests)
