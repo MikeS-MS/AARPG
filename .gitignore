@@ -1,6 +1,9 @@
 # Visual Studio 2015 user specific files
 .vs/
 
+# Rider user specific files
+.idea/
+
 # Compiled Object files
 *.slo
 *.lo
@@ -75,3 +78,5 @@ DerivedDataCache/*
 
 # Content to ignore
 Content/Models
+Content/FX
+Content/AssetPacks
