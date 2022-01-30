@@ -2,6 +2,8 @@
 
 #pragma once
 
+#include <string>
+
 #include "CoreMinimal.h"
 #include "QuestStructures.generated.h"
 
@@ -26,7 +28,10 @@ struct FQuest
 	FText QuestDescription; 
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Quest", meta=(ToolTip="Short description of the quest meant to be used on screen/HUD"))
-	FText QuestDescriptionHUD; 
+	FText QuestDescriptionHUD;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Quest", meta=(ToolTip="Short description of the quest meant to be used on screen/HUD"))
+	TMap<FString, int32> QuestItemRequirements; 
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Quest", meta=(ToolTip="All the IDs of the bottom-level quests that this top-level quest rules over."))
 	TArray<int32> SubQuestsIDs; 
