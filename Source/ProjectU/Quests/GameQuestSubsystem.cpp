@@ -125,6 +125,7 @@ void UGameQuestSubsystem::CompleteQuest(const int32 QuestID)
 			{
 				m_Quests[MasterQuestID].bIsCompleted = true;
 				UE_LOG(LogQuestSystem, Warning, TEXT("Completed master quest, ID:%d"), QuestID)
+				OnMainQuestCompleted.Broadcast(MasterQuestID);
 			}
 		}
 		OnQuestCompleted.Broadcast(MasterQuestID);
