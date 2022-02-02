@@ -28,6 +28,9 @@ public:
 
     UPROPERTY(BlueprintAssignable, Category="Dispatchers")
     FQuestDelegate  OnQuestCompleted;
+    
+    UPROPERTY(BlueprintAssignable, Category="Dispatchers")
+    FQuestDelegate  OnMainQuestCompleted;
 
     UPROPERTY(BlueprintAssignable, Category="Dispatchers")
     FQuestDelegate  OnQuestActivated;
