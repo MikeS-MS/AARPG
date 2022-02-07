@@ -48,7 +48,7 @@ TArray<FQuest> UGameQuestSubsystem::GetActiveQuests() const
 	TArray<FQuest> ActiveQuests;
 	for(const auto& Quest : m_Quests)
 	{
-		if (!Quest.Value.bIsCompleted)
+		if (Quest.Value.bIsActive && !Quest.Value.bIsCompleted)
 		{
 			ActiveQuests.Push(Quest.Value);
 		}
@@ -74,13 +74,15 @@ FQuest UGameQuestSubsystem::GetQuest(const int32 QuestID) const
 	return FQuest();
 }
 
-void UGameQuestSubsystem::LoadQuests(const TArray<FQuest> InQuests)
+void UGameQuestSubsystem::LoadQuests(const TArray<FQuest> InQuests, bool ActivateQuests)
 {
 	UE_LOG(LogQuestSystem, Warning, TEXT("Loaded %d quests"), InQuests.Num())
 	for(const auto& Quest: InQuests)
 	{
 		m_Quests.Add(Quest.QuestID, Quest);
-		ActivateQuest(Quest.QuestID);
+		
+		if (ActivateQuests)
+			ActivateQuest(Quest.QuestID);
 	}
 	
 	OnQuestsLoaded.Broadcast(0);
@@ -153,7 +155,7 @@ bool UGameQuestSubsystem::ActivateQuest(const int32 QuestID)
 		{
 			auto& ReqEntry = m_QuestItemRequirements.FindOrAdd(Requirement.Key);
 			ReqEntry += Requirement.Value;
-			UE_LOG(LogQuestSystem, Warning, TEXT("%s:%d"), *Requirement.Key, Requirement.Value);
+			UE_LOG(LogQuestSystem, Warning, TEXT("Added requirements: %s:%d"), *Requirement.Key, Requirement.Value);
 		}
 
 		// Broadcast a delegate with the activated quest id
@@ -173,6 +175,7 @@ bool UGameQuestSubsystem::UpdateQuestItemTracker(const FString ItemName, const i
 	if(itemReq)
 	{
 		*itemReq = FMath::Max(*itemReq - ItemQty, 0);
+		UE_LOG(LogQuestSystem, Warning, TEXT("Updated quest item: %s, new qty: %d"), *ItemName, *itemReq)
 		OnItemUpdated.Broadcast(ItemName, *itemReq);
 		return *itemReq == 0;
 	}
