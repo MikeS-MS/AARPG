@@ -65,13 +65,13 @@ public:
     FQuest GetQuest(int32 QuestID) const;
     
     UFUNCTION(BlueprintCallable, Category="Quests")
-    void LoadQuests(const TArray<FQuest> InQuests);
+    void LoadQuests(const TArray<FQuest> InQuests, bool ActivateQuests);
     
     UFUNCTION(BlueprintCallable, Category="Quests")
-    void CompleteQuest(const int32 QuestID);
+    bool CompleteQuest(const int32 QuestID);
     
     UFUNCTION(BlueprintCallable, Category="Quests")
-    void ActivateQuest(const int32 QuestID);
+    bool ActivateQuest(const int32 QuestID);
     
     UFUNCTION(BlueprintCallable, Category="Quests")
     bool UpdateQuestItemTracker(const FString ItemName, const int32 ItemQty);
