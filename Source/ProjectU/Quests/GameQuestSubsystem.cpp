@@ -86,7 +86,7 @@ void UGameQuestSubsystem::LoadQuests(const TArray<FQuest> InQuests)
 	OnQuestsLoaded.Broadcast(0);
 }
 
-void UGameQuestSubsystem::CompleteQuest(const int32 QuestID)
+bool UGameQuestSubsystem::CompleteQuest(const int32 QuestID)
 {
 	auto& CurrentQuest = m_Quests[QuestID];
 	const bool bIsValid = m_Quests.Contains(QuestID);
@@ -94,13 +94,13 @@ void UGameQuestSubsystem::CompleteQuest(const int32 QuestID)
 	if(!CurrentQuest.bIsActive)
 	{
 		UE_LOG(LogQuestSystem, Warning, TEXT("Quest is not active to be completed: QuestID %d"), CurrentQuest.QuestID);
-		return;
+		return false;
 	}
 	
 	if(!IsQuestItemsCompleted(QuestID))
 	{
 		UE_LOG(LogQuestSystem, Warning, TEXT("The item requirements are not met for the quest to be completed: QuestID %d"), CurrentQuest.QuestID);
-		return;
+		return false;
 	}
 	
 	if(bIsValid)
@@ -126,15 +126,21 @@ void UGameQuestSubsystem::CompleteQuest(const int32 QuestID)
 				m_Quests[MasterQuestID].bIsCompleted = true;
 				UE_LOG(LogQuestSystem, Warning, TEXT("Completed master quest, ID:%d"), QuestID)
 				OnMainQuestCompleted.Broadcast(MasterQuestID);
+			} else
+			{
+				return false;
 			}
 		}
 		OnQuestCompleted.Broadcast(MasterQuestID);
 		OnQuestCompleted.Broadcast(QuestID);
+		return true;
 	}
+	
 	UE_LOG(LogQuestSystem, Error, TEXT("Invalid quest ID:%d, couldn't complete the quest."), QuestID)
+	return false;
 }
 
-void UGameQuestSubsystem::ActivateQuest(const int32 QuestID)
+bool UGameQuestSubsystem::ActivateQuest(const int32 QuestID)
 {
 	const auto Quest = m_Quests.Find(QuestID);
 	if(Quest)
@@ -153,10 +159,11 @@ void UGameQuestSubsystem::ActivateQuest(const int32 QuestID)
 		// Broadcast a delegate with the activated quest id
 		OnQuestActivated.Broadcast(QuestID);
 		UE_LOG(LogQuestSystem, Warning, TEXT("Activated quest, ID:%d"), QuestID)
-	} else
-	{
-		UE_LOG(LogQuestSystem, Error, TEXT("Invalid quest ID:%d, couldn't activate the quest."), QuestID)
+		return true;
 	}
+	
+	UE_LOG(LogQuestSystem, Error, TEXT("Invalid quest ID:%d, couldn't activate the quest."), QuestID)
+	return false;
 }
 
 // Update the quest item tracker
