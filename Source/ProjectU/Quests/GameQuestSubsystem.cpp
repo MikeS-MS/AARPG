@@ -10,48 +10,51 @@ void UGameQuestSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 	Super::Initialize(Collection);
 }
 
-bool UGameQuestSubsystem::IsQuestItemsCompleted(int32 QuestID)
+bool UGameQuestSubsystem::QuestRequirementsMet(int32 QuestID)
 {
-	const auto Quest = m_Quests.Find(QuestID);
+	const auto currentQuest = m_Quests.Find(QuestID);
+	bool itemsCompleted = true;
 	
-	bool bItemRequirementsMet = true;
-	for(const auto& ItemRequirement : Quest->QuestItemRequirements)
+	if(currentQuest->QuestItemRequirements.Num() > 0)
 	{
-		int* Result = m_QuestItemRequirements.Find(ItemRequirement.Key);
-		if(!Result && *Result != 0)
+		for(const auto& Requirement : currentQuest->QuestItemRequirements)
 		{
-			bItemRequirementsMet = false;
-			UE_LOG(LogQuestSystem, Warning, TEXT("Item requirement not met: \nRequirements: Item:%s, Qty:%d\nCurrent qty:%d"), *ItemRequirement.Key, ItemRequirement.Value, Result);
-		} else
-		{
-			UE_LOG(LogQuestSystem, Warning, TEXT("Item requirements  met: \nRequirements: Item:%s, Qty:%d"), *ItemRequirement.Key, ItemRequirement.Value);
+			const auto itemQty = m_QuestItemRequirements.Find(Requirement.Key);
+			if(*itemQty != 0)
+			{
+				UE_LOG(LogQuestSystem, Error, TEXT("Not completed requirement: ITEM:%s, QTY:%d"), *Requirement.Key, *itemQty)
+				itemsCompleted = false;
+			}
 		}
 	}
-	return bItemRequirementsMet;
+	
+	return itemsCompleted;
 }
 
-TArray<int32> UGameQuestSubsystem::GetActiveQuestsIDs() const
+void UGameQuestSubsystem::RegenerateActiveQuests()
 {
-	TArray<int32> ActiveQuestIDs;
-	for(const auto& Quest : m_Quests)
+	m_ActiveQuestIDs.Empty();
+	for(const auto& questItr : m_Quests)
 	{
-		if (!Quest.Value.bIsCompleted && Quest.Value.bIsActive)
-			ActiveQuestIDs.Push(Quest.Key);
+		if(questItr.Value.bIsActive && questItr.Value.bIsCompleted != false)
+		{
+			m_ActiveQuestIDs.Push(questItr.Key);
+		}
 	}
+}
 
-	return ActiveQuestIDs;
+TArray<int32> UGameQuestSubsystem::GetActiveQuestIDs() const
+{
+	return m_ActiveQuestIDs;
 }
 
 TArray<FQuest> UGameQuestSubsystem::GetActiveQuests() const
 {
 	UE_LOG(LogQuestSystem, Warning, TEXT("Returned all active quests"))
 	TArray<FQuest> ActiveQuests;
-	for(const auto& Quest : m_Quests)
+	for(const auto& questID : GetActiveQuestIDs())
 	{
-		if (Quest.Value.bIsActive && !Quest.Value.bIsCompleted)
-		{
-			ActiveQuests.Push(Quest.Value);
-		}
+		ActiveQuests.Push(m_Quests[questID]);
 	}
 
 	return ActiveQuests;
@@ -74,82 +77,110 @@ FQuest UGameQuestSubsystem::GetQuest(const int32 QuestID) const
 	return FQuest();
 }
 
-void UGameQuestSubsystem::LoadQuests(const TArray<FQuest> InQuests, bool ActivateQuests)
+void UGameQuestSubsystem::LoadQuests(const TArray<FQuest> InQuestIDs, bool ActivateQuests)
 {
-	UE_LOG(LogQuestSystem, Warning, TEXT("Loaded %d quests"), InQuests.Num())
-	for(const auto& Quest: InQuests)
+	UE_LOG(LogQuestSystem, Warning, TEXT("Loaded %d quests"), InQuestIDs.Num())
+	for(const auto& Quest: InQuestIDs)
 	{
 		m_Quests.Add(Quest.QuestID, Quest);
 		
 		if (ActivateQuests)
 			ActivateQuest(Quest.QuestID);
 	}
-	
+
+	RegenerateActiveQuests();
 	OnQuestsLoaded.Broadcast(0);
 }
 
 bool UGameQuestSubsystem::CompleteQuest(const int32 QuestID)
 {
-	auto& CurrentQuest = m_Quests[QuestID];
-	const bool bIsValid = m_Quests.Contains(QuestID);
+	auto& currentQuest = m_Quests[QuestID];
+	const bool validQuest = m_Quests.Contains(QuestID);
 
-	if(!CurrentQuest.bIsActive)
+	if(currentQuest.bIsCompleted)
 	{
-		UE_LOG(LogQuestSystem, Warning, TEXT("Quest is not active to be completed: QuestID %d"), CurrentQuest.QuestID);
-		return false;
-	}
-	
-	if(!IsQuestItemsCompleted(QuestID))
-	{
-		UE_LOG(LogQuestSystem, Warning, TEXT("The item requirements are not met for the quest to be completed: QuestID %d"), CurrentQuest.QuestID);
-		return false;
-	}
-	
-	if(bIsValid)
-	{
-		const int32 MasterQuestID = CurrentQuest.MasterQuestID;
-		CurrentQuest.bIsCompleted = true;
-		UE_LOG(LogQuestSystem, Warning, TEXT("Completed quest, ID:%d"), QuestID)
-		// Check if this is the last sub-quest and mark the master quest as completed if true
-		bool bAllQuestsAreCompleted = true;
-		if(CurrentQuest.bIsSideQuest && m_Quests.Find(MasterQuestID))
-		{
-			for(const auto& Quest : GetActiveQuests())
-			{
-				if(Quest.MasterQuestID == MasterQuestID)
-				{
-					bAllQuestsAreCompleted &= Quest.bIsCompleted;
-					UE_LOG(LogQuestSystem, Warning, TEXT("Found quest that is completed: %b with ID: %d"), bAllQuestsAreCompleted, QuestID)
-				}
-			}
-			
-			if(bAllQuestsAreCompleted)
-			{
-				m_Quests[MasterQuestID].bIsCompleted = true;
-				UE_LOG(LogQuestSystem, Warning, TEXT("Completed master quest, ID:%d"), QuestID)
-				OnMainQuestCompleted.Broadcast(MasterQuestID);
-			} else
-			{
-				return false;
-			}
-		}
-		OnQuestCompleted.Broadcast(MasterQuestID);
-		OnQuestCompleted.Broadcast(QuestID);
+		UE_LOG(LogQuestSystem, Warning, TEXT("Quest has been completed already: QuestID %d"), currentQuest.QuestID);
 		return true;
 	}
 	
-	UE_LOG(LogQuestSystem, Error, TEXT("Invalid quest ID:%d, couldn't complete the quest."), QuestID)
-	return false;
+	if(!currentQuest.bIsActive)
+	{
+		UE_LOG(LogQuestSystem, Warning, TEXT("Quest is not active to be completed: QuestID %d"), currentQuest.QuestID);
+		return false;
+	}
+	
+	// Check if quest has any requirements to be completed (collect items, etc...)
+	if(!QuestRequirementsMet(QuestID))
+	{
+		UE_LOG(LogQuestSystem, Warning, TEXT("The item requirements are not met for the quest to be completed: QuestID %d"), currentQuest.QuestID);
+		return false;
+	}
+
+	// Check if it's a master quest and the sub-quests are completed else automatically brand it as completed
+	if(validQuest && currentQuest.bIsMasterQuest)
+	{
+		bool allQuestsCompleted = true;
+		for(const auto& quest : m_Quests)
+		{
+			allQuestsCompleted &= quest.Value.bIsCompleted && quest.Value.MasterQuestID == QuestID;
+		}
+
+		if(allQuestsCompleted)
+		{
+			currentQuest.bIsActive = false;
+			currentQuest.bIsCompleted = true;
+		} else
+		{
+			return false;
+		}
+	} else
+	{
+		currentQuest.bIsActive = false;
+		currentQuest.bIsCompleted = true;
+	}
+
+	OnQuestCompleted.Broadcast(QuestID);
+	OnQuestCompletedXP.Broadcast(QuestID, currentQuest.ExperiencePoints);
+	RegenerateActiveQuests();
+	return true;
+}
+
+bool UGameQuestSubsystem::ForceCompleteQuest(const int32 QuestID)
+{
+	auto& currentQuest = m_Quests[QuestID];
+	const bool validQuest = m_Quests.Contains(QuestID);
+
+	if(validQuest)
+	{
+		if(currentQuest.bIsMasterQuest)
+		{
+			for(const auto& subQuestID : currentQuest.SubQuestsIDs)
+			{
+				ForceCompleteQuest(subQuestID);
+			}
+		}
+		
+		currentQuest.bIsActive = false;
+		currentQuest.bIsCompleted = true;
+	}
+	
+	if(currentQuest.bIsMasterQuest)
+		OnMainQuestCompleted.Broadcast(QuestID);
+	
+	OnQuestCompleted.Broadcast(QuestID);
+
+	RegenerateActiveQuests();
+	return validQuest;
 }
 
 bool UGameQuestSubsystem::ActivateQuest(const int32 QuestID)
 {
-	const auto Quest = m_Quests.Find(QuestID);
-	if(Quest)
+	const auto currentQuest = m_Quests.Find(QuestID);
+	if(currentQuest)
 	{
-		Quest->bIsActive = true;
+		currentQuest->bIsActive = true;
 		
-		const auto ItemRequirements = Quest->QuestItemRequirements;
+		const auto ItemRequirements = currentQuest->QuestItemRequirements;
 		// Add the quest item requirements to be tracked
 		for(const auto& Requirement : ItemRequirements)
 		{
@@ -158,9 +189,18 @@ bool UGameQuestSubsystem::ActivateQuest(const int32 QuestID)
 			UE_LOG(LogQuestSystem, Warning, TEXT("Added requirements: %s:%d"), *Requirement.Key, Requirement.Value);
 		}
 
+		if(currentQuest->bIsMasterQuest)
+		{
+			for(const auto& subQuestID : currentQuest->SubQuestsIDs)
+			{
+				ActivateQuest(subQuestID);
+			}
+		}
+
 		// Broadcast a delegate with the activated quest id
 		OnQuestActivated.Broadcast(QuestID);
-		UE_LOG(LogQuestSystem, Warning, TEXT("Activated quest, ID:%d"), QuestID)
+		UE_LOG(LogQuestSystem, Warning, TEXT("Activated quest: ID:%d"), QuestID)
+		RegenerateActiveQuests();
 		return true;
 	}
 	

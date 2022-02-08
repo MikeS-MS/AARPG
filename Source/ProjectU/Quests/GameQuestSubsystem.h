@@ -8,6 +8,7 @@
 #include "GameQuestSubsystem.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FQuestDelegate, int32, QuestID);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FQuestCompletedXP, int32, QuestID, int32, QuestXP);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FQuestItemDelegate, FString, ItemName, int32, ItemQty);
 
 DECLARE_LOG_CATEGORY_EXTERN(LogQuestSystem, Log, All)
@@ -24,10 +25,16 @@ private:
 
     UPROPERTY()
     TMap<FString, int32> m_QuestItemRequirements;
+
+    UPROPERTY()
+    TArray<int32> m_ActiveQuestIDs;
 public:
 
     UPROPERTY(BlueprintAssignable, Category="Dispatchers")
     FQuestDelegate  OnQuestCompleted;
+    
+    UPROPERTY(BlueprintAssignable, Category="Dispatchers")
+    FQuestCompletedXP  OnQuestCompletedXP;
     
     UPROPERTY(BlueprintAssignable, Category="Dispatchers")
     FQuestDelegate  OnMainQuestCompleted;
@@ -46,14 +53,17 @@ public:
 
 private:
     UFUNCTION()
-    bool IsQuestItemsCompleted(int32 QuestID);
+    bool QuestRequirementsMet(int32 QuestID);
+    
+    UFUNCTION()
+    void RegenerateActiveQuests();
     
     UFUNCTION()
     void UpdateQuestItemTrackerDelegate(const FString ItemName, const int32 ItemQty);
     
 public:
     UFUNCTION(BlueprintCallable, Category="Quests")
-    TArray<int32> GetActiveQuestsIDs() const;
+    TArray<int32> GetActiveQuestIDs() const;
 
     UFUNCTION(BlueprintCallable, Category="Quests")
     TArray<FQuest> GetActiveQuests() const;
@@ -62,13 +72,16 @@ public:
     TArray<FQuest> GetAllQuests() const;
     
     UFUNCTION(BlueprintCallable, Category="Quests")
-    FQuest GetQuest(int32 QuestID) const;
+    FQuest GetQuest(const int32 QuestID) const;
     
     UFUNCTION(BlueprintCallable, Category="Quests")
-    void LoadQuests(const TArray<FQuest> InQuests, bool ActivateQuests);
+    void LoadQuests(const TArray<FQuest> InQuestIDs, bool ActivateQuests);
     
     UFUNCTION(BlueprintCallable, Category="Quests")
     bool CompleteQuest(const int32 QuestID);
+    
+    UFUNCTION(BlueprintCallable, Category="Quests")
+    bool ForceCompleteQuest(const int32 QuestID);
     
     UFUNCTION(BlueprintCallable, Category="Quests")
     bool ActivateQuest(const int32 QuestID);

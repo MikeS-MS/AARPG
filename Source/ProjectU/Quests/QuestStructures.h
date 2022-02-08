@@ -30,8 +30,11 @@ struct FQuest
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Quest", meta=(ToolTip="Short description of the quest meant to be used on screen/HUD"))
 	FText QuestDescriptionHUD;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Quest", meta=(ToolTip="Short description of the quest meant to be used on screen/HUD"))
-	TMap<FString, int32> QuestItemRequirements; 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Quest", meta=(ToolTip=""))
+	TMap<FString, int32> QuestItemRequirements;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Quest", meta=(ToolTip=""))
+	int32 ExperiencePoints; 
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Quest", meta=(ToolTip="All the IDs of the bottom-level quests that this top-level quest rules over."))
 	TArray<int32> SubQuestsIDs; 
