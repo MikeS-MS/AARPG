@@ -34,10 +34,12 @@ bool UGameQuestSubsystem::QuestRequirementsMet(int32 QuestID)
 void UGameQuestSubsystem::RegenerateActiveQuests()
 {
 	m_ActiveQuestIDs.Empty();
+	UE_LOG(LogQuestSystem, Warning, TEXT("Regenerating active IDs"));
 	for(const auto& questItr : m_Quests)
 	{
 		if(questItr.Value.bIsActive && questItr.Value.bIsCompleted != false)
 		{
+			UE_LOG(LogQuestSystem, Warning, TEXT("Added key to active quests: %d"), questItr.Key);
 			m_ActiveQuestIDs.Push(questItr.Key);
 		}
 	}
@@ -48,7 +50,7 @@ TArray<int32> UGameQuestSubsystem::GetActiveQuestIDs() const
 	return m_ActiveQuestIDs;
 }
 
-TArray<FQuest> UGameQuestSubsystem::GetActiveQuests() const
+TArray<FQuest> UGameQuestSubsystem::GetActiveQuests()
 {
 	UE_LOG(LogQuestSystem, Warning, TEXT("Returned all active quests"))
 	TArray<FQuest> ActiveQuests;
@@ -88,7 +90,6 @@ void UGameQuestSubsystem::LoadQuests(const TArray<FQuest> InQuestIDs, bool Activ
 			ActivateQuest(Quest.QuestID);
 	}
 
-	RegenerateActiveQuests();
 	OnQuestsLoaded.Broadcast(0);
 }
 
@@ -122,7 +123,8 @@ bool UGameQuestSubsystem::CompleteQuest(const int32 QuestID)
 		bool allQuestsCompleted = true;
 		for(const auto& quest : m_Quests)
 		{
-			allQuestsCompleted &= quest.Value.bIsCompleted && quest.Value.MasterQuestID == QuestID;
+			if(quest.Value.MasterQuestID == QuestID)
+				allQuestsCompleted &= quest.Value.bIsCompleted;
 		}
 
 		if(allQuestsCompleted)
@@ -137,11 +139,20 @@ bool UGameQuestSubsystem::CompleteQuest(const int32 QuestID)
 	{
 		currentQuest.bIsActive = false;
 		currentQuest.bIsCompleted = true;
+
+		CompleteQuest(currentQuest.MasterQuestID);
 	}
 
+	if(!currentQuest.bIsMasterQuest)
+	{
+		m_ActiveQuestIDs.Remove(QuestID);
+	} else
+	{
+		RegenerateActiveQuests();
+	}
+	
 	OnQuestCompleted.Broadcast(QuestID);
 	OnQuestCompletedXP.Broadcast(QuestID, currentQuest.ExperiencePoints);
-	RegenerateActiveQuests();
 	return true;
 }
 
@@ -173,7 +184,7 @@ bool UGameQuestSubsystem::ForceCompleteQuest(const int32 QuestID)
 	return validQuest;
 }
 
-bool UGameQuestSubsystem::ActivateQuest(const int32 QuestID)
+bool UGameQuestSubsystem::ActivateQuest(const int32 QuestID, const bool bBroadcastIt)
 {
 	const auto currentQuest = m_Quests.Find(QuestID);
 	if(currentQuest)
@@ -193,14 +204,22 @@ bool UGameQuestSubsystem::ActivateQuest(const int32 QuestID)
 		{
 			for(const auto& subQuestID : currentQuest->SubQuestsIDs)
 			{
-				ActivateQuest(subQuestID);
+				ActivateQuest(subQuestID, false);
 			}
 		}
 
+		if(!m_ActiveQuestIDs.Contains(QuestID))
+		{
+			m_ActiveQuestIDs.Push(QuestID);
+		}
+		
 		// Broadcast a delegate with the activated quest id
-		OnQuestActivated.Broadcast(QuestID);
+		if(bBroadcastIt)
+		{
+			OnQuestActivated.Broadcast(QuestID);
+		}
 		UE_LOG(LogQuestSystem, Warning, TEXT("Activated quest: ID:%d"), QuestID)
-		RegenerateActiveQuests();
+		
 		return true;
 	}
 	

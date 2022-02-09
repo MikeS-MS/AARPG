@@ -66,7 +66,7 @@ public:
     TArray<int32> GetActiveQuestIDs() const;
 
     UFUNCTION(BlueprintCallable, Category="Quests")
-    TArray<FQuest> GetActiveQuests() const;
+    TArray<FQuest> GetActiveQuests();
 
     UFUNCTION(BlueprintCallable, Category="Quests")
     TArray<FQuest> GetAllQuests() const;
@@ -84,7 +84,7 @@ public:
     bool ForceCompleteQuest(const int32 QuestID);
     
     UFUNCTION(BlueprintCallable, Category="Quests")
-    bool ActivateQuest(const int32 QuestID);
+    bool ActivateQuest(const int32 QuestID, const bool bBroadcastIt = true);
     
     UFUNCTION(BlueprintCallable, Category="Quests")
     bool UpdateQuestItemTracker(const FString ItemName, const int32 ItemQty);
